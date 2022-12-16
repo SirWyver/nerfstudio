@@ -244,7 +244,11 @@ class ViewerState:
             CONSOLE.line()
             version = get_viewer_version()
             websocket_url = f"ws://localhost:{self.config.websocket_port}"
-            self.viewer_url = f"https://viewer.nerf.studio/versions/{version}/?websocket_url={websocket_url}"
+            if hasattr(self.config,"local_viewer_port") and self.config.local_viewer_port is not None:
+                self.viewer_url = f"http://localhost:{self.config.local_viewer_port}/?websocket_url={websocket_url}"
+                self.config.skip_openrelay = True
+            else:
+                self.viewer_url = f"https://viewer.nerf.studio/versions/{version}/?websocket_url={websocket_url}"
             CONSOLE.rule(characters="=")
             CONSOLE.print(f"[Public] Open the viewer at {self.viewer_url}")
             CONSOLE.rule(characters="=")
@@ -381,7 +385,8 @@ class ViewerState:
         is_training = self.vis["renderingState/isTraining"].read()
         self.step = step
 
-        self._check_camera_path_payload(trainer, step)
+        if trainer is not None:
+            self._check_camera_path_payload(trainer, step)
         self._check_webrtc_offer()
 
         camera_object = self._get_camera_object()
@@ -426,7 +431,8 @@ class ViewerState:
                     self._render_image_in_viewer(camera_object, graph, is_training)
                     camera_object = self._get_camera_object()
                 is_training = self.vis["renderingState/isTraining"].read()
-                self._check_camera_path_payload(trainer, step)
+                if trainer is not None:
+                    self._check_camera_path_payload(trainer, step)
                 self._check_webrtc_offer()
                 run_loop = not is_training
                 local_step += 1
@@ -515,7 +521,7 @@ class ViewerState:
 
         if self.config.skip_openrelay:
             ice_servers = [
-                RTCIceServer(urls="stun:stun.l.google.com:19302"),
+              #  RTCIceServer(urls="stun:stun.l.google.com:19302"),
             ]
         else:
             ice_servers = [
