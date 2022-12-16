@@ -79,16 +79,23 @@ class Blender(DataParser):
 
         img_0 = imageio.imread(image_filenames[0])
         image_height, image_width = img_0.shape[:2]
-        camera_angle_x = float(meta["camera_angle_x"])
-        focal_length = 0.5 * image_width / np.tan(0.5 * camera_angle_x)
+        if "camera_angle_x" not in meta:
+            # custom nerf format
+            cx, cy = meta['cx'] + 0.5, meta['cy'] + 0.5
+            focal_length = meta['fl_x']
+            bound = 0.55
+        else:
+            camera_angle_x = float(meta["camera_angle_x"])
+            focal_length = 0.5 * image_width / np.tan(0.5 * camera_angle_x)
 
-        cx = image_width / 2.0
-        cy = image_height / 2.0
+            cx = image_width / 2.0
+            cy = image_height / 2.0
+            bound = 1.5
         camera_to_world = torch.from_numpy(poses[:, :3])  # camera to world transform
 
         # in x,y,z order
         camera_to_world[..., 3] *= self.scale_factor
-        scene_box = SceneBox(aabb=torch.tensor([[-1.5, -1.5, -1.5], [1.5, 1.5, 1.5]], dtype=torch.float32))
+        scene_box = SceneBox(aabb=torch.tensor([[-bound, -bound, -bound], [bound, bound, bound]], dtype=torch.float32))
 
         cameras = Cameras(
             camera_to_worlds=camera_to_world,

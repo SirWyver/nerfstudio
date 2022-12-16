@@ -49,6 +49,7 @@ from nerfstudio.models.mipnerf import MipNerfModel
 from nerfstudio.models.nerfacto import NerfactoModelConfig
 from nerfstudio.models.semantic_nerfw import SemanticNerfWModelConfig
 from nerfstudio.models.tensorf import TensoRFModelConfig
+from nerfstudio.models.triplane import TriplaneModelConfig
 from nerfstudio.models.vanilla_nerf import NeRFModel, VanillaModelConfig
 from nerfstudio.pipelines.base_pipeline import VanillaPipelineConfig
 from nerfstudio.pipelines.dynamic_batch import DynamicBatchPipelineConfig
@@ -278,6 +279,27 @@ method_configs["phototourism"] = ExperimentConfig(
         },
     },
     viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
+    vis="viewer",
+)
+
+
+
+method_configs["triplane"] = ExperimentConfig(
+    method_name="triplane",
+    trainer=TrainerConfig(
+        steps_per_eval_batch=500, steps_per_save=2000, max_num_iterations=30000, mixed_precision=True
+    ),
+    pipeline=DynamicBatchPipelineConfig(
+        datamanager=VanillaDataManagerConfig(dataparser=NerfstudioDataParserConfig(), train_num_rays_per_batch=8192),
+        model=TriplaneModelConfig(eval_num_rays_per_chunk=8192),
+    ),
+    optimizers={
+        "fields": {
+            "optimizer": AdamOptimizerConfig(lr=1e-2, eps=1e-15),
+            "scheduler": None,
+        }
+    },
+    viewer=ViewerConfig(num_rays_per_chunk=64000),
     vis="viewer",
 )
 

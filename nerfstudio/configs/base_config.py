@@ -177,3 +177,4 @@ class ViewerConfig(PrintableConfig):
     skip_openrelay: bool = False
     """Avoid using openrelay to communicate with the viewer. Try disabling if you have trouble
     connecting to the viewer"""
+    local_viewer_port: Optional[int] = None
